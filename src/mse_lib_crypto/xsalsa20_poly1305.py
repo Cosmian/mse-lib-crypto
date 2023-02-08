@@ -84,11 +84,11 @@ def encrypt_file(
 
 def encrypt_directory(
     dir_path: Path,
-    patterns: List[str],
+    pattern: str,
     key: bytes,
     nonces: Optional[Dict[str, bytes]],
     exceptions: List[str],
-    dir_exceptions: List[str],
+    ignore_patterns: List[str],
     out_dir_path: Path,
 ) -> Dict[str, bytes]:
     """Encrypt the content of directory `dir_path` using XSalsa20-Poly1305.
@@ -97,16 +97,16 @@ def encrypt_directory(
     ----------
     dir_path : Path
         Path to the directory to be encrypted.
-    patterns: List[str]
-        List of patterns to be matched in the directory.
+    pattern: str
+        A pattern to be matched in the directory.
     key : bytes
         Symmetric key used for encryption.
     nonces : Optional[Dict[str, bytes]]
         Map of string path to nonce. Randomly generated if None.
     exceptions: List[str]
         List of files which won't be encrypted.
-    dir_exceptions: List[str]
-        List of directories which won't be encrypted recursively.
+    ignore_patterns: List[str]
+        List of patterns which won't be copied.
     out_dir_path: Path
         Output directory path. Will be removed if already exists.
 
@@ -122,30 +122,25 @@ def encrypt_directory(
     if out_dir_path.exists():
         shutil.rmtree(out_dir_path)
 
-    shutil.copytree(dir_path, out_dir_path)
+    shutil.copytree(
+        dir_path, out_dir_path, ignore=shutil.ignore_patterns(*ignore_patterns)
+    )
 
     nonce_map: Dict[str, bytes] = {}
 
-    for pattern in patterns:  # type: str
-        for path in out_dir_path.rglob(pattern):  # type: Path
-            if (
-                path.is_file()
-                and path.name not in exceptions
-                and all(directory not in path.parts for directory in dir_exceptions)
-            ):
-                relpath: Path = path.relative_to(out_dir_path)
-                if nonces is not None and f"{relpath}" not in nonces:
-                    raise NonceNotFound(
-                        f"Path '{relpath}' not found in nonces: {nonces}"
-                    )
-                nonce: bytes = (
-                    nonces[f"{relpath}"]
-                    if nonces is not None
-                    else nacl.utils.random(NONCE_LENGTH)
-                )
-                nonce_map[f"{relpath}"] = nonce
-                encrypt_file(path, key, nonce)
-                path.unlink()
+    for path in out_dir_path.rglob(pattern):
+        if path.is_file() and path.name not in exceptions:
+            relpath: Path = path.relative_to(out_dir_path)
+            if nonces is not None and f"{relpath}" not in nonces:
+                raise NonceNotFound(f"Path '{relpath}' not found in nonces: {nonces}")
+            nonce: bytes = (
+                nonces[f"{relpath}"]
+                if nonces is not None
+                else nacl.utils.random(NONCE_LENGTH)
+            )
+            nonce_map[f"{relpath}"] = nonce
+            encrypt_file(path, key, nonce)
+            path.unlink()
 
     return nonce_map
 
