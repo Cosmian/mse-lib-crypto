@@ -1,3 +1,4 @@
+from pathlib import Path
 from mse_lib_crypto.xsalsa20_poly1305 import (
     encrypt,
     decrypt,
@@ -37,7 +38,7 @@ def test_xsalsa20_poly1305_directory(tmp_path):
 
     key: bytes = random_key()
 
-    nonce_map = encrypt_directory(dir1, ["*.txt"], key, None, [], [], enc_dir1)
+    nonce_map = encrypt_directory(dir1, "*.txt", key, None, [], [], enc_dir1)
     enc_f1 = enc_dir1 / "file1.txt.enc"
     enc_f2 = enc_dir1 / "file2.txt.enc"
     expected_f1 = enc_dir1 / "file1.txt"
@@ -49,7 +50,7 @@ def test_xsalsa20_poly1305_directory(tmp_path):
     enc_dir1_test = encdir / "test-dir1"
     expected_enc_f1 = enc_dir1_test / "file1.txt.enc"
     expected_enc_f2 = enc_dir1_test / "file2.txt.enc"
-    encrypt_directory(dir1, ["*.txt"], key, nonce_map, [], [], enc_dir1_test)
+    encrypt_directory(dir1, "*.txt", key, nonce_map, [], [], enc_dir1_test)
     assert enc_f1.read_bytes() == expected_enc_f1.read_bytes()
     assert enc_f2.read_bytes() == expected_enc_f2.read_bytes()
 
