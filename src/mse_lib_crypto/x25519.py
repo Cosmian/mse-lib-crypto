@@ -21,6 +21,11 @@ def x25519_keygen() -> Tuple[bytes, bytes]:
     return bytes(public_key), bytes(private_key)
 
 
+def x25519_pk_from_sk(private_key: bytes) -> bytes:
+    """X25519 public key from `private_key`."""
+    return bytes(PrivateKey(private_key).public_key)
+
+
 def x25519(private_key: bytes, public_key: bytes) -> bytes:
     """Scalar multiplication over Curve25519.
 
