@@ -32,7 +32,7 @@ setup(
     long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
     zip_safe=False,
-    install_requires=["cryptography>=39.0.0,<40.0.0", "pynacl>=1.5.0,<2.0.0"],
+    install_requires=["cryptography>=40.0.2,<40.1.0", "pynacl>=1.5.0,<2.0.0"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
